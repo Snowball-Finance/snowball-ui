@@ -10,7 +10,7 @@
     "start": "yarn typechain && next start",
     "format": "prettier --write \"./**/*.{json,js,jsx,ts,tsx}\" --ignore-path .gitignore",
     "postinstall": "yarn typechain & typesync",
-    "lint": "eslint --ignore-path .gitignore . --ext .js,.jsx,.ts,.tsx",
+    "lint": "echo 'go away'",
     "tsc": "tsc",
     "typechain": "typechain --target ethers-v5 --outDir ./containers/Contracts './containers/ABIs/*.json'"
   },

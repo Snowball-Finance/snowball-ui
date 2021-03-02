@@ -3,16 +3,10 @@ import { useEffect, useState } from "react";
 import { DEPOSIT_TOKENS_JAR_NAMES, JAR_DEPOSIT_TOKENS } from "./jars";
 import { Prices } from "../Prices";
 import {
-  UNI_ETH_DAI_STAKING_REWARDS,
-  UNI_ETH_USDC_STAKING_REWARDS,
-  UNI_ETH_USDT_STAKING_REWARDS,
-  UNI_ETH_WBTC_STAKING_REWARDS,
   SCRV_STAKING_REWARDS,
   Contracts,
-  BASIS_BAC_DAI_STAKING_REWARDS,
-  MITH_MIC_USDT_STAKING_REWARDS,
   STECRV_STAKING_REWARDS,
-  MITH_MIS_USDT_STAKING_REWARDS,
+  PNG_STAKING_REWARDS,
 } from "../Contracts";
 import { Jar } from "./useFetchJars";
 import { useCurveRawStats } from "./useCurveRawStats";
@@ -20,8 +14,8 @@ import { useCurveCrvAPY } from "./useCurveCrvAPY";
 import { useCurveSNXAPY } from "./useCurveSNXAPY";
 import { useUniPairDayData } from "./useUniPairDayData";
 import { useSushiPairDayData } from "./useSushiPairDayData";
+import { usePngPairDayData } from "./usePngPairDayData";
 import { formatEther } from "ethers/lib/utils";
-import { UniV2Pairs } from "../UniV2Pairs";
 import { useCompAPY } from "./useCompAPY";
 import erc20 from "@studydefi/money-legos/erc20";
 
@@ -29,8 +23,8 @@ import compound from "@studydefi/money-legos/compound";
 
 import { Contract as MulticallContract } from "ethers-multicall";
 import { Connection } from "../Connection";
-import { SushiPairs } from "../SushiPairs";
 import { useCurveLdoAPY } from "./useCurveLdoAPY";
+import { PngPairs } from "../PngPairs";
 
 const AVERAGE_BLOCK_TIME = 13.22;
 
@@ -70,8 +64,9 @@ export const useJarWithAPY = (jars: Input): Output => {
   const { multicallProvider } = Connection.useContainer();
   const { controller, strategy } = Contracts.useContainer();
   const { prices } = Prices.useContainer();
-  const { getPairData: getSushiPairData } = SushiPairs.useContainer();
-  const { getPairData: getUniPairData } = UniV2Pairs.useContainer();
+  const { getPairData: getPngPairData } = PngPairs.useContainer();
+  //const { getPairData: getSushiPairData } = SushiPairs.useContainer();
+  //const { getPairData: getUniPairData } = UniV2Pairs.useContainer();
   const {
     stakingRewards,
     susdPool,
@@ -128,7 +123,7 @@ export const useJarWithAPY = (jars: Input): Output => {
     null,
   );
 
-  const calculateUNIAPY = async (rewardsAddress: string) => {
+  /*  const calculateUNIAPY = async (rewardsAddress: string) => {
     if (stakingRewards && prices?.uni && getUniPairData && multicallProvider) {
       const multicallUniStakingRewards = new MulticallContract(
         rewardsAddress,
@@ -168,125 +163,43 @@ export const useJarWithAPY = (jars: Input): Output => {
 
     return [];
   };
-
-  const calculateBasisAPY = async (rewardsAddress: string) => {
-    if (stakingRewards && prices?.bas && getUniPairData && multicallProvider) {
-      const multicallUniStakingRewards = new MulticallContract(
+ */
+  const calculatePNGAPY = async (rewardsAddress: string) => {
+    if (stakingRewards && prices?.png && getPngPairData && multicallProvider) {
+      const multicallPngStakingRewards = new MulticallContract(
         rewardsAddress,
         stakingRewards.interface.fragments,
       );
 
       const [
-        rewardRateBN,
+        rewardsDurationBN,
+        pngRewardsForDurationBN,
         stakingToken,
         totalSupplyBN,
       ] = await multicallProvider.all([
-        multicallUniStakingRewards.rewardRate(),
-        multicallUniStakingRewards.lpt(),
-        multicallUniStakingRewards.totalSupply(),
+        multicallPngStakingRewards.rewardsDuration(),
+        multicallPngStakingRewards.getRewardForDuration(),
+        multicallPngStakingRewards.stakingToken(),
+        multicallPngStakingRewards.totalSupply(),
       ]);
 
       const totalSupply = parseFloat(formatEther(totalSupplyBN));
-      const basRewardRate = parseFloat(formatEther(rewardRateBN));
-
-      const { pricePerToken } = await getUniPairData(stakingToken);
-
-      const basRewardsPerYear = basRewardRate * (360 * 24 * 60 * 60);
-      const valueRewardedPerYear = prices.bas * basRewardsPerYear;
-
-      const totalValueStaked = totalSupply * pricePerToken;
-      const basAPY = valueRewardedPerYear / totalValueStaked;
-
-      return [
-        { bas: getCompoundingAPY(basAPY * 0.8), apr: basAPY * 0.8 * 100 },
-      ];
-    }
-
-    return [];
-  };
-
-  const calculateMithAPY = async (rewardsAddress: string) => {
-    if (
-      stakingRewards &&
-      prices?.mis &&
-      getSushiPairData &&
-      multicallProvider
-    ) {
-      const multicallUniStakingRewards = new MulticallContract(
-        rewardsAddress,
-        stakingRewards.interface.fragments,
+      const rewardsDuration = rewardsDurationBN.toNumber(); //epoch
+      const pngRewardsForDuration = parseFloat(
+        formatEther(pngRewardsForDurationBN),
       );
 
-      const [
-        rewardRateBN,
-        stakingToken,
-        totalSupplyBN,
-      ] = await multicallProvider.all([
-        multicallUniStakingRewards.rewardRate(),
-        multicallUniStakingRewards.lpt(),
-        multicallUniStakingRewards.totalSupply(),
-      ]);
+      const { pricePerToken } = await getPngPairData(stakingToken);
 
-      const totalSupply = parseFloat(formatEther(totalSupplyBN));
-      const misRewardRate = parseFloat(formatEther(rewardRateBN));
-
-      const { pricePerToken } = await getSushiPairData(stakingToken);
-      console.log(pricePerToken, stakingToken);
-
-      const misRewardsPerYear = misRewardRate * (360 * 24 * 60 * 60);
-      const valueRewardedPerYear = prices.mis * misRewardsPerYear;
+      const pngRewardsPerYear =
+        pngRewardsForDuration * ((360 * 24 * 60 * 60) / rewardsDuration);
+      const valueRewardedPerYear = prices.png * pngRewardsPerYear;
 
       const totalValueStaked = totalSupply * pricePerToken;
-      const misAPY = valueRewardedPerYear / totalValueStaked;
-      console.log(misAPY);
+      const pngAPY = valueRewardedPerYear / totalValueStaked;
 
-      return [
-        { mis: getCompoundingAPY(misAPY * 0.8), apr: misAPY * 0.8 * 100 },
-      ];
-    }
-
-    return [];
-  };
-
-  const calculateSushiAPY = async (lpTokenAddress: string) => {
-    if (sushiChef && prices?.sushi && getSushiPairData && multicallProvider) {
-      const poolId = sushiPoolIds[lpTokenAddress];
-      const multicallSushiChef = new MulticallContract(
-        sushiChef.address,
-        sushiChef.interface.fragments,
-      );
-      const lpToken = new MulticallContract(lpTokenAddress, erc20.abi);
-
-      const [
-        sushiPerBlockBN,
-        totalAllocPointBN,
-        poolInfo,
-        totalSupplyBN,
-      ] = await multicallProvider.all([
-        multicallSushiChef.sushiPerBlock(),
-        multicallSushiChef.totalAllocPoint(),
-        multicallSushiChef.poolInfo(poolId),
-        lpToken.balanceOf(sushiChef.address),
-      ]);
-
-      const totalSupply = parseFloat(formatEther(totalSupplyBN));
-      const sushiRewardsPerBlock =
-        (parseFloat(formatEther(sushiPerBlockBN)) *
-          0.9 *
-          poolInfo.allocPoint.toNumber()) /
-        totalAllocPointBN.toNumber();
-
-      const { pricePerToken } = await getSushiPairData(lpTokenAddress);
-
-      const sushiRewardsPerYear =
-        sushiRewardsPerBlock * ((360 * 24 * 60 * 60) / AVERAGE_BLOCK_TIME);
-      const valueRewardedPerYear = prices.sushi * sushiRewardsPerYear;
-
-      const totalValueStaked = totalSupply * pricePerToken;
-      const sushiAPY = valueRewardedPerYear / totalValueStaked;
-
-      // no more UNI being distributed
-      return [{ sushi: getCompoundingAPY(sushiAPY), apr: sushiAPY * 100 }];
+      // no more PNG being distributed
+      return [{ png: 0 * 100 * 0.725, apr: 0 }];
     }
 
     return [];
@@ -295,171 +208,18 @@ export const useJarWithAPY = (jars: Input): Output => {
   const calculateAPY = async () => {
     if (jars && controller && strategy) {
       const [
-        uniEthDaiApy,
-        uniEthUsdcApy,
-        uniEthUsdtApy,
-        uniEthWBtcApy,
-        basisBacDaiApy,
-        sushiEthDaiApy,
-        sushiEthUsdcApy,
-        sushiEthUsdtApy,
-        sushiEthWBtcApy,
-        sushiEthYfiApy,
-        sushiEthyveCRVApy,
-      ] = await Promise.all([
-        calculateUNIAPY(UNI_ETH_DAI_STAKING_REWARDS),
-        calculateUNIAPY(UNI_ETH_USDC_STAKING_REWARDS),
-        calculateUNIAPY(UNI_ETH_USDT_STAKING_REWARDS),
-        calculateUNIAPY(UNI_ETH_WBTC_STAKING_REWARDS),
-        calculateBasisAPY(BASIS_BAC_DAI_STAKING_REWARDS),
-        calculateSushiAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_DAI),
-        calculateSushiAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_USDC),
-        calculateSushiAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_USDT),
-        calculateSushiAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_WBTC),
-        calculateSushiAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_YFI),
-        calculateSushiAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_YVECRV),
-      ]);
-      const mithMicUsdtApy = await calculateMithAPY(
-        MITH_MIC_USDT_STAKING_REWARDS,
-      );
-      const mithMisUsdtApy = await calculateMithAPY(
-        MITH_MIS_USDT_STAKING_REWARDS,
-      );
+        // pngAvaxSushiApy,
+        pngAvaxUniApy,
+      ] = await Promise.all([calculatePNGAPY(PNG_AVAX_UNI_STAKING_REWARDS)]);
 
       const promises = jars.map(async (jar) => {
         let APYs: Array<JarApy> = [];
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.sCRV) {
+        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.PNG_AVAX_UNI) {
           APYs = [
-            { lp: curveRawStats?.ren2 || 0 },
-            ...susdCrvAPY,
-            ...susdSNXAPY,
+            ...pngAvaxUniApy,
+            ...getPngPairDayAPY(JAR_DEPOSIT_TOKENS.PNG_AVAX_UNI),
           ];
         }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.steCRV) {
-          APYs = [
-            { lp: curveRawStats?.steth || 0 },
-            ...stEthLdoAPY,
-            ...stEthCrvAPY,
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.renCRV) {
-          APYs = [{ lp: curveRawStats?.susd || 0 }, ...ren2CrvAPY];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES["3CRV"]) {
-          APYs = [
-            { lp: curveRawStats ? curveRawStats["3pool"] : 0 },
-            ...threePoolCrvAPY,
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_DAI) {
-          APYs = [
-            ...uniEthDaiApy,
-            ...getUniPairDayAPY(JAR_DEPOSIT_TOKENS.UNIV2_ETH_DAI),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_USDC) {
-          APYs = [
-            ...uniEthUsdcApy,
-            ...getUniPairDayAPY(JAR_DEPOSIT_TOKENS.UNIV2_ETH_USDC),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_USDT) {
-          APYs = [
-            ...uniEthUsdtApy,
-            ...getUniPairDayAPY(JAR_DEPOSIT_TOKENS.UNIV2_ETH_USDT),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_WBTC) {
-          APYs = [
-            ...uniEthWBtcApy,
-            ...getUniPairDayAPY(JAR_DEPOSIT_TOKENS.UNIV2_ETH_WBTC),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_BAC_DAI) {
-          APYs = [
-            ...basisBacDaiApy,
-            ...getUniPairDayAPY(JAR_DEPOSIT_TOKENS.UNIV2_BAC_DAI),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_MIC_USDT) {
-          APYs = [
-            ...mithMicUsdtApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_MIC_USDT),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_MIS_USDT) {
-          APYs = [
-            ...mithMisUsdtApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_MIS_USDT),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_DAI) {
-          APYs = [
-            ...sushiEthDaiApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_DAI),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_USDC) {
-          APYs = [
-            ...sushiEthUsdcApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_USDC),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_USDT) {
-          APYs = [
-            ...sushiEthUsdtApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_USDT),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_WBTC) {
-          APYs = [
-            ...sushiEthWBtcApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_WBTC),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_YFI) {
-          APYs = [
-            ...sushiEthYfiApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_YFI),
-          ];
-        }
-
-        if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_YVECRV) {
-          APYs = [
-            ...sushiEthyveCRVApy,
-            ...getSushiPairDayAPY(JAR_DEPOSIT_TOKENS.SUSHI_ETH_YVECRV),
-          ];
-        }
-
-        // if (jar.strategyName === STRATEGY_NAMES.DAI.COMPOUNDv2) {
-        //   const leverageBN = await jar.strategy.callStatic.getCurrentLeverage();
-        //   const leverage = parseFloat(formatEther(leverageBN));
-
-        //   const compDaiAPYsWithLeverage = compDaiAPYs.map((x) => {
-        //     const key = Object.keys(x)[0];
-        //     return {
-        //       [key]: x[key] * leverage,
-        //     };
-        //   });
-
-        //   APYs = [...compDaiAPYsWithLeverage];
-        // }
 
         let apr = 0;
         APYs.map((x) => {
@@ -476,9 +236,6 @@ export const useJarWithAPY = (jars: Input): Output => {
           }
         });
 
-        // const totalAPY = APYs.map((x) => {
-        //   return Object.values(x).reduce((acc, y) => acc + y, 0);
-        // }).reduce((acc, x) => acc + x, 0);
         const totalAPY = getCompoundingAPY(apr / 100) + lp;
 
         return {
