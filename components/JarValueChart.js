@@ -9,7 +9,7 @@ import {
   pickleNeon,
   graphFill,
   pickleBlue,
-  pickleWhite
+  pickleWhite,
 } from "../util/constants";
 import Avatar from "@material-ui/core/Avatar";
 import Skeleton from "@material-ui/lab/Skeleton";
@@ -122,7 +122,7 @@ export default function JarValueChart(props) {
   let value;
   if (data.length > 0) {
     const currentValue = data[data.length - 1].y;
-    value = formatDollars(currentValue)
+    value = formatDollars(currentValue);
   }
 
   const icon = `/assets/${asset.toLowerCase()}.png`;

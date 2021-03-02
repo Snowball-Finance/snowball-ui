@@ -1,9 +1,8 @@
 import { FC } from "react";
 import { Grid, Page } from "@geist-ui/react";
 import { TopBar } from "../features/TopBar/TopBar";
-import { Balances } from "../features/Balances/Balances";
-import { Prices } from "../features/Prices/Prices";
-// import { SummaryCard as Farms } from "../features/Farms/SummaryCard";
+// import { Balances } from "../features/Balances/Balances";
+// import { Prices } from "../features/Prices/Prices";
 import { SummaryCard as Jars } from "../features/Jars/SummaryCard";
 import { Footer } from "../features/Footer/Footer";
 

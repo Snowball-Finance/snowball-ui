@@ -21,7 +21,7 @@ import { Page } from "@geist-ui/react";
 import { TopBar } from "../features/TopBar/TopBar";
 import { Footer } from "../features/Footer/Footer";
 import { Jars } from "../containers/Jars";
-import { UniV2Pairs } from "../containers/UniV2Pairs";
+import { PngPairs } from "../containers/PngPairs";
 import {
   backgroundColor,
   cardColor,
@@ -36,7 +36,7 @@ import {
   getPerformanceData,
   getCoinData,
 } from "../util/api";
-import { powerPool, jars } from "../util/jars";
+import { jars } from "../util/jars";
 import clsx from "clsx";
 
 const useStyles = makeStyles((theme) => ({
@@ -152,7 +152,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const jarOptions = jars.concat([powerPool]);
+const jarOptions = jars;
 
 const DataPoint = styled.div`
   font-size: 24px;
@@ -406,7 +406,7 @@ export default function Brining() {
   const [pickleData, setPickleData] = useState(undefined);
   const [liquidity, setLiquidity] = useState<number | null>(null);
 
-  const { getPairData } = UniV2Pairs.useContainer();
+  const { getPairData } = PngPairs.useContainer();
   const { jars: pickleJars } = Jars.useContainer();
 
   useEffect(() => {

@@ -110,8 +110,8 @@ export default function Earn(props) {
   const [accountData, setAccountData] = useState(undefined);
 
   useEffect(() => {
-    account ? setAccount(account) : setAccount(address)
-  }, account)
+    account ? setAccount(account) : setAccount(address);
+  }, account);
 
   useEffect(() => {
     const updateAccountData = async () => {
@@ -303,7 +303,7 @@ export default function Earn(props) {
             <img src="/assets/jar.png" alt="" className={classes.pickle} />
           </div>
         )}
-      <Footer />
+        <Footer />
       </Page>
     </ThemeProvider>
   );
