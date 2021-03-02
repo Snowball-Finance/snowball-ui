@@ -2,30 +2,26 @@ import { useEffect, useState } from "react";
 
 import { Connection } from "../Connection";
 import { JAR_DEPOSIT_TOKENS } from "./jars";
-import { PICKLE_ETH_FARM } from "../Farms/farms";
 
-export interface UniLPAPY {
+export interface PngLPAPY {
   pairAddress: string;
   reserveUSD: number;
   dailyVolumeUSD: number;
 }
 
-const UNI_LP_TOKENS = [
-  PICKLE_ETH_FARM,
-  JAR_DEPOSIT_TOKENS.UNIV2_ETH_DAI,
-  JAR_DEPOSIT_TOKENS.UNIV2_ETH_USDC,
-  JAR_DEPOSIT_TOKENS.UNIV2_ETH_USDT,
-  JAR_DEPOSIT_TOKENS.UNIV2_ETH_WBTC,
-  JAR_DEPOSIT_TOKENS.UNIV2_BAC_DAI,
-];
+const PNG_LP_TOKENS = [JAR_DEPOSIT_TOKENS.PNG_AVAX_UNI];
 
-export const useUniPairDayData = () => {
+export const usePngPairDayData = () => {
   const { signer } = Connection.useContainer();
 
-  const [uniPairDayData, setUniPairDayData] = useState<Array<UniLPAPY> | null>(
+  const [pngPairDayData, setPngPairDayData] = useState<Array<PngLPAPY> | null>(
     null,
   );
 
+  /**
+   * TODO: Connect to TheGraph when AVAX is conncted
+   * In the meantime, our options are to hard code vaues or remove APY
+   */
   const queryTheGraph = async () => {
     const res = await fetch(
       "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v2",
@@ -39,7 +35,7 @@ export const useUniPairDayData = () => {
           "Content-Type": "application/json",
         },
         referrer: "https://thegraph.com/explorer/subgraph/uniswap/uniswap-v2",
-        body: `{"query":"{\\n  pairDayDatas(first: ${UNI_LP_TOKENS.length.toString()}, skip: 1, orderBy: date, orderDirection: desc, where: {pairAddress_in: [\\"${UNI_LP_TOKENS.join(
+        body: `{"query":"{\\n  pairDayDatas(first: ${PNG_LP_TOKENS.length.toString()}, skip: 1, orderBy: date, orderDirection: desc, where: {pairAddress_in: [\\"${PNG_LP_TOKENS.join(
           '\\", \\"',
         )}\\"]}) {\\n    pairAddress\\n    reserveUSD\\n    dailyVolumeUSD\\n  }\\n}\\n","variables":null}`,
         method: "POST",
@@ -47,12 +43,12 @@ export const useUniPairDayData = () => {
       },
     ).then((x) => x.json());
 
-    res.data.pairDayDatas && setUniPairDayData(res.data.pairDayDatas); // Sometimes the graph call fails
+    res.data.pairDayDatas && setPngPairDayData(res.data.pairDayDatas); // Sometimes the graph call fails
   };
 
-  const getUniPairDayAPY = (pair: string) => {
-    if (uniPairDayData) {
-      const filteredPair = uniPairDayData.filter(
+  const getPngPairDayAPY = (pair: string) => {
+    if (pngPairDayData) {
+      const filteredPair = pngPairDayData.filter(
         (x) => x.pairAddress.toLowerCase() === pair.toLowerCase(),
       );
 
@@ -75,6 +71,6 @@ export const useUniPairDayData = () => {
   }, [signer]);
 
   return {
-    getUniPairDayAPY,
+    getPngPairDayAPY,
   };
 };

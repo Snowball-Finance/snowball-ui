@@ -2,51 +2,21 @@ import { useState, useEffect } from "react";
 import { createContainer } from "unstated-next";
 
 const requestURL =
-  "https://api.coingecko.com/api/v3/simple/price?ids=pickle-finance%2Cethereum%2Cdai%2Cusd-coin%2Ccompound-governance-token%2Ccurve-dao-token%2Ctether%2Cuniswap%2Chavven%2Cnusd%2Cwrapped-bitcoin%2Csushi%2Cyearn-finance%2Cbasis-share%2Cbasis-cash%2Cmithril-share%2Cmith-cash%2Clido-dao&vs_currencies=usd";
+  "https://api.coingecko.com/api/v3/simple/price?ids=pangolin%2Cavalanche%2Cuniswap&vs_currencies=usd";
 
 type UsdPrice = { usd: number };
 
 interface Response {
-  dai: UsdPrice;
-  ["compound-governance-token"]: UsdPrice;
-  ethereum: UsdPrice;
-  nusd: UsdPrice;
-  "pickle-finance": UsdPrice;
-  tether: UsdPrice;
-  "usd-coin": UsdPrice;
-  "curve-dao-token": UsdPrice;
   uniswap: UsdPrice;
-  havven: UsdPrice;
-  "wrapped-bitcoin": UsdPrice;
-  sushi: UsdPrice;
-  "yearn-finance": UsdPrice;
-  "basis-share": UsdPrice;
-  "basis-cash": UsdPrice;
-  "mithril-share": UsdPrice;
-  "mith-cash": UsdPrice;
-  "lido-dao": UsdPrice;
+  pangolin: UsdPrice;
+  avalanche: UsdPrice;
 }
 
 interface PriceObject {
-  dai: number;
-  comp: number;
-  eth: number;
-  susd: number;
-  pickle: number;
-  usdt: number;
-  usdc: number;
-  crv: number;
-  snx: number;
   uni: number;
-  sushi: number;
-  yfi: number;
-  wbtc: number;
-  bas: number;
-  bac: number;
-  mis: number;
-  mic: number;
-  ldo: number;
-  yvecrv: number;
+  avax: number;
+  png: number;
+  pickle: number;
 }
 
 export type PriceIds = keyof PriceObject;
@@ -71,24 +41,11 @@ function usePrices() {
     }).then((x) => x.json());
 
     const prices: PriceObject = {
-      dai: response.dai.usd,
-      comp: response["compound-governance-token"].usd,
-      eth: response.ethereum.usd,
-      susd: response.nusd.usd,
-      pickle: response["pickle-finance"].usd,
-      usdt: response.tether.usd,
-      usdc: response["usd-coin"].usd,
-      crv: response["curve-dao-token"].usd,
-      snx: response["havven"].usd,
       uni: response["uniswap"].usd,
-      sushi: response["sushi"].usd,
-      yfi: response["yearn-finance"].usd,
-      wbtc: response["wrapped-bitcoin"].usd,
-      bas: response["basis-share"].usd,
-      bac: response["basis-cash"].usd,
-      mis: response["mithril-share"].usd,
-      mic: response["mith-cash"].usd,
-      ldo: response["lido-dao"].usd,
+      png: response["pangolin"].usd,
+      avax: response["avalanche"].usd,
+      pickle: "20.00",
+      //snow: response["snowball"].usd,
     };
     setPrices(prices);
   };

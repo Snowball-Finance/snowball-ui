@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
 import moment from "moment";
 
-import { StakingRewards } from "../Contracts/StakingRewards";
-
 import { Contracts } from "../Contracts";
 import { Connection } from "../Connection";
 import { Prices } from "../Prices";
@@ -14,7 +12,6 @@ export interface UseStakingRewardsOutput {
   earned: ethers.BigNumber | null;
   rewardForDuration: ethers.BigNumber | null;
   rewardsDurationInDays: number | null;
-  pickleStakingRewards: StakingRewards | null;
 }
 
 export function useStakingRewards(
@@ -99,8 +96,5 @@ export function useStakingRewards(
     earned,
     rewardForDuration,
     rewardsDurationInDays,
-    pickleStakingRewards: stakingRewards
-      ? stakingRewards.attach(stakingRewardsAddress)
-      : null,
   };
 }

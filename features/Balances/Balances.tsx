@@ -3,10 +3,9 @@ import styled from "styled-components";
 import { Card, Grid, Tooltip } from "@geist-ui/react";
 import { useBalances } from "./useBalances";
 import { Prices } from "../../containers/Prices";
-import { UniV2Pairs } from "../../containers/UniV2Pairs";
+import { PngPairs } from "../../containers/PngPairs";
 import { Connection } from "../../containers/Connection";
 import { Jars } from "../../containers/Jars";
-import { PickleStaking } from "../../containers/PickleStaking";
 import { ethers } from "ethers";
 
 const Container = styled(Grid.Container)`
@@ -57,23 +56,12 @@ export const Balances: FC = () => {
     picklePerBlock,
   } = useBalances();
 
-  const { WETHRewards } = PickleStaking.useContainer();
-
   let earned = ethers.constants.Zero;
   let staked = ethers.constants.Zero;
 
-  if (WETHRewards) {
-    const { staked: stakedWETH, earned: earnedWETH } = WETHRewards;
-
-    if (stakedWETH && earnedWETH) {
-      earned = earned.add(earnedWETH);
-      staked = staked.add(stakedWETH);
-    }
-  }
-
   const { blockNum } = Connection.useContainer();
   const { prices } = Prices.useContainer();
-  const { getPairData } = UniV2Pairs.useContainer();
+  const { getPairData } = PngPairs.useContainer();
   const { jars } = Jars.useContainer();
 
   const [liquidity, setLiquidity] = useState<number | null>(null);

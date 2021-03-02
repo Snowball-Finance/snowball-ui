@@ -22,131 +22,44 @@ type Output = {
   jarsWithTVL: Array<JarWithTVL> | null;
 };
 
-const isCurvePool = (jarName: string): boolean => {
-  return (
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.sCRV ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES["3CRV"] ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.renCRV ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.steCRV
-  );
-};
-
-// UniV2/SLP pools
-const isUniPool = (jarName: string): boolean => {
-  return (
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_DAI ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_DAI_OLD ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_USDC ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_USDC_OLD ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_USDT ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_USDT_OLD ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_ETH_WBTC ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_DAI ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_USDC ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_USDT ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_WBTC ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_YFI ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.UNIV2_BAC_DAI ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_MIC_USDT ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_MIS_USDT ||
-    jarName === DEPOSIT_TOKENS_JAR_NAMES.SUSHI_ETH_YVECRV
-  );
+const isPngPool = (jarName: string): boolean => {
+  return jarName === DEPOSIT_TOKENS_JAR_NAMES.PNG_AVAX_UNI;
 };
 
 export const useJarWithTVL = (jars: Input): Output => {
   const { multicallProvider } = Connection.useContainer();
   const { prices } = Prices.useContainer();
-  const {
-    uniswapv2Pair,
-    susdPool,
-    renPool,
-    steCRVPool,
-    threePool,
-  } = Contracts.useContainer();
+  const { pangolinPair } = Contracts.useContainer();
 
   const [jarsWithTVL, setJarsWithTVL] = useState<Array<JarWithTVL> | null>(
     null,
   );
 
-  const measureCurveTVL = async (jar: JarWithAPY) => {
-    let pool;
-    let pricePerUnderlying;
-
-    if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.sCRV) {
-      pool = susdPool;
-      pricePerUnderlying = prices?.dai;
-    }
-
-    if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES["3CRV"]) {
-      pool = threePool;
-      pricePerUnderlying = prices?.dai;
-    }
-
-    if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.renCRV) {
-      pool = renPool;
-      pricePerUnderlying = prices?.wbtc;
-    }
-
-    if (jar.jarName === DEPOSIT_TOKENS_JAR_NAMES.steCRV) {
-      pool = steCRVPool;
-      pricePerUnderlying = prices?.eth;
-    }
-
-    if (!pool || !pricePerUnderlying || !multicallProvider) {
+  const measurePngJarTVL = async (jar: JarWithAPY) => {
+    if (!pangolinPair || !prices) {
       return { ...jar, tvlUSD: null, usdPerPToken: null, ratio: null };
     }
 
-    const multicallJarContract = new MulticallContract(
-      jar.contract.address,
-      jar.contract.interface.fragments,
-    );
-
-    const multicallPoolContract = new MulticallContract(
-      pool.address,
-      pool.interface.fragments,
-    );
-
-    const [supply, balance, virtualPrice, ratio] = (
-      await multicallProvider.all([
-        multicallJarContract.totalSupply(),
-        multicallJarContract.balance(),
-        multicallPoolContract.get_virtual_price(),
-        multicallJarContract.getRatio(),
-      ])
-    ).map((x) => parseFloat(formatEther(x)));
-
-    const tvlUSD = balance * virtualPrice * pricePerUnderlying;
-
-    const usdPerPToken = tvlUSD / supply;
-
-    return { ...jar, tvlUSD, usdPerPToken, ratio };
-  };
-
-  const measureUniJarTVL = async (jar: JarWithAPY) => {
-    if (!uniswapv2Pair || !prices) {
-      return { ...jar, tvlUSD: null, usdPerPToken: null, ratio: null };
-    }
-
-    const uniPair = uniswapv2Pair.attach(jar.depositToken.address);
+    const pngPair = pangolinPair.attach(jar.depositToken.address);
 
     const [
       supply,
       balance,
-      totalUNI,
+      totalPNG,
       token0,
       token1,
       ratio,
     ] = await Promise.all([
       jar.contract.totalSupply(),
       jar.contract.balance().catch(() => ethers.BigNumber.from(0)),
-      uniPair.totalSupply(),
-      uniPair.token0(),
-      uniPair.token1(),
+      pngPair.totalSupply(),
+      pngPair.token0(),
+      pngPair.token1(),
       jar.contract.getRatio().catch(() => ethers.utils.parseEther("1")),
     ]);
 
-    const Token0 = uniswapv2Pair.attach(token0);
-    const Token1 = uniswapv2Pair.attach(token1);
+    const Token0 = pangolinPair.attach(token0);
+    const Token1 = pangolinPair.attach(token1);
 
     const [
       token0InPool,
@@ -154,26 +67,26 @@ export const useJarWithTVL = (jars: Input): Output => {
       token0Decimal,
       token1Decimal,
     ] = await Promise.all([
-      Token0.balanceOf(uniPair.address),
-      Token1.balanceOf(uniPair.address),
+      Token0.balanceOf(pngPair.address),
+      Token1.balanceOf(pngPair.address),
       Token0.decimals(),
       Token1.decimals(),
     ]);
 
     const dec18 = parseEther("1");
 
-    const token0PerUni = token0InPool.mul(dec18).div(totalUNI);
-    const token1PerUni = token1InPool.mul(dec18).div(totalUNI);
+    const token0PerPng = token0InPool.mul(dec18).div(totalPNG);
+    const token1PerPng = token1InPool.mul(dec18).div(totalPNG);
 
     const token0Bal = parseFloat(
       ethers.utils.formatUnits(
-        token0PerUni.mul(balance).div(dec18),
+        token0PerPng.mul(balance).div(dec18),
         token0Decimal,
       ),
     );
     const token1Bal = parseFloat(
       ethers.utils.formatUnits(
-        token1PerUni.mul(balance).div(dec18),
+        token1PerPng.mul(balance).div(dec18),
         token1Decimal,
       ),
     );
@@ -198,44 +111,11 @@ export const useJarWithTVL = (jars: Input): Output => {
     };
   };
 
-  const measureCompoundTVL = async (jar: JarWithAPY) => {
-    if (!prices) {
-      return { ...jar, tvlUSD: null, usdPerPToken: null, ratio: null };
-    }
-
-    const [supply, balance, ratio] = (
-      await Promise.all([
-        jar.contract.totalSupply(),
-        jar.contract.balance().catch(() => ethers.BigNumber.from(0)),
-        jar.contract.getRatio().catch(() => ethers.utils.parseEther("1")),
-      ])
-    ).map((x) => parseFloat(formatEther(x)));
-
-    const priceId = getPriceId(jar.depositToken.address);
-
-    const tvlUSD = prices[priceId] * balance;
-
-    const usdPerPToken = tvlUSD / supply;
-
-    return {
-      ...jar,
-      tvlUSD,
-      usdPerPToken,
-      ratio,
-    };
-  };
-
   const measureTVL = async () => {
-    if (jars && susdPool) {
+    if (jars) {
       const promises: Array<Promise<JarWithTVL>> = jars.map(async (jar) => {
-        if (isCurvePool(jar.jarName)) {
-          return measureCurveTVL(jar);
-        } else if (isUniPool(jar.jarName)) {
-          return measureUniJarTVL(jar);
-        }
-
-        if (jar.strategyName === STRATEGY_NAMES.DAI.COMPOUNDv2) {
-          return measureCompoundTVL(jar);
+        if (isPngPool(jar.jarName)) {
+          return measurePngJarTVL(jar);
         }
 
         return {

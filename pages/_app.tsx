@@ -13,13 +13,9 @@ import { Connection } from "../containers/Connection";
 import { Contracts } from "../containers/Contracts";
 import { Prices } from "../containers/Prices";
 import { Pickles } from "../containers/Pickles";
-import { PickleStaking } from "../containers/PickleStaking";
-import { Farms } from "../containers/Farms";
 import { Jars } from "../containers/Jars";
-import { UniV2Pairs } from "../containers/UniV2Pairs";
+import { PngPairs } from "../containers/PngPairs";
 import { UserJars } from "../containers/UserJars";
-import { UserFarms } from "../containers/UserFarms";
-import { SushiPairs } from "../containers/SushiPairs";
 
 const WithContainers: FC = ({ children }) => (
   <Connection.Provider>
@@ -28,19 +24,11 @@ const WithContainers: FC = ({ children }) => (
         <ERC20Transfer.Provider>
           <Prices.Provider>
             <Pickles.Provider>
-              <PickleStaking.Provider>
-                <UniV2Pairs.Provider>
-                  <SushiPairs.Provider>
-                    <Jars.Provider>
-                      <Farms.Provider>
-                        <UserJars.Provider>
-                          <UserFarms.Provider>{children}</UserFarms.Provider>
-                        </UserJars.Provider>
-                      </Farms.Provider>
-                    </Jars.Provider>
-                  </SushiPairs.Provider>
-                </UniV2Pairs.Provider>
-              </PickleStaking.Provider>
+              <PngPairs.Provider>
+                <Jars.Provider>
+                  <UserJars.Provider>{children}</UserJars.Provider>
+                </Jars.Provider>
+              </PngPairs.Provider>
             </Pickles.Provider>
           </Prices.Provider>
         </ERC20Transfer.Provider>
