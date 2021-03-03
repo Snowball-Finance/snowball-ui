@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 
 const getApi = () => {
   if (process.env.NODE_ENV === "production") {
-    return "https://api.pickle-jar.info";
+    return "https://api.pickle-jar.info"; //TODO: replace with pangolin api
   }
   return "https://thzdn4atqa.execute-api.us-west-1.amazonaws.com/brining";
 };

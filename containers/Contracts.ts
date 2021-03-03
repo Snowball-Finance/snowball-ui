@@ -15,13 +15,7 @@ import { Erc20 } from "./Contracts/Erc20";
 import { Erc20Factory } from "./Contracts/Erc20Factory";
 import { PangolinPair } from "./Contracts/PangolinPair";
 import { PangolinPairFactory } from "./Contracts/PangolinPairFactory";
-
-export const PNG_AVAX_UNI_STAKING_REWARDS =
-  "0x8Cc0183526ab00b2b1F3f4d42Ae7821e6Af2CbCb"; // FUJI
-
-export const PICKLE_TOKEN_ADDR = "0x429881672B9AE42b8EbA0E26cD9C73711b891Ca5";
-export const MASTERCHEF_ADDR = "0xbD17B1ce622d73bD438b9E658acA5996dc394b0d";
-export const CONTROLLER_ADDR = "0x6847259b2B3A4c17e7c43C54409810aF48bA5210";
+import { addresses } from "../util/address";
 
 function useContracts() {
   const { signer } = Connection.useContainer();
@@ -42,9 +36,9 @@ function useContracts() {
 
   const initContracts = async () => {
     if (signer) {
-      setPickle(Erc20Factory.connect(PICKLE_TOKEN_ADDR, signer));
-      setMasterchef(MasterchefFactory.connect(MASTERCHEF_ADDR, signer));
-      setController(ControllerFactory.connect(CONTROLLER_ADDR, signer));
+      setPickle(Erc20Factory.connect(addresses.snow, signer));
+      setMasterchef(MasterchefFactory.connect(addresses.ice_queen, signer));
+      setController(ControllerFactory.connect(addresses.controller, signer));
       setStakingRewards(
         StakingRewardsFactory.connect(ethers.constants.AddressZero, signer),
       );

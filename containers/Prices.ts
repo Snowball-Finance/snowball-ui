@@ -44,6 +44,7 @@ function usePrices() {
       uni: response["uniswap"].usd,
       png: response["pangolin"].usd,
       avax: response["avalanche"].usd,
+
       pickle: "20.00",
       //snow: response["snowball"].usd,
     };
