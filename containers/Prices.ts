@@ -46,7 +46,7 @@ function usePrices() {
       avax: response["avalanche"].usd,
 
       pickle: "20.00",
-      //snow: response["snowball"].usd,
+      //snowglobe: response["snowglobeball"].usd,
     };
     setPrices(prices);
   };

@@ -36,7 +36,7 @@ function useContracts() {
 
   const initContracts = async () => {
     if (signer) {
-      setPickle(Erc20Factory.connect(addresses.snow, signer));
+      setPickle(Erc20Factory.connect(addresses.snowglobe, signer));
       setMasterchef(MasterchefFactory.connect(addresses.ice_queen, signer));
       setController(ControllerFactory.connect(addresses.controller, signer));
       setStakingRewards(

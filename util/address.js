@@ -7,7 +7,7 @@ export const addresses = {
   wavax: "",
   png_rewards: "",
   sushi: "",
-  snow: "",
+  snowglobe: "",
   uni: "",
   png_avax_uni: "",
 };
